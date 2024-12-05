@@ -11,11 +11,16 @@
 #ifndef MEMORIA_SD_H
 #define MEMORIA_SD_H
 
+#include <SPI.h>
+#include <SD.h>
+
 /**
  * @brief Función que inicializa.
  */
-void InicializaMemoriaSD();
-
+void inicializaMemoriaSD();
+void guardarHorario(byte hora, byte minuto);
+void guardarHistorial();
+void enviarArchivo(const char* nombreArchivo);
 
 
 #endif

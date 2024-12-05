@@ -1,21 +1,38 @@
-/**
- * @file sensor.cpp
- * @author Pedrotti Vanina - Solis Milagros 
- * @brief 
- * @version 0.1
- * @date 2024-09-12
- * 
- * @copyright Copyright (c) 2024
- * 
- */
-
 #include <Arduino.h>
 #include <sensor.h>
 
-#include <SPI.h> //creo que el sensor 
+#define trigPin  4 
+#define echoPin  5
 
-void InicializaSensor(){
+void inicializaSensor(){
+    pinMode(trigPin, OUTPUT);
+    pinMode(echoPin, INPUT);
 
+    digitalWrite(trigPin, LOW);//Inicializamos el pin con 0
 }
 
+float medidadeSensor(){
+    // Genera un pulso de 10 μs en el pin TRIG
+    digitalWrite(trigPin, LOW);
+    delayMicroseconds(2); 
+    digitalWrite(trigPin, HIGH);
+    delayMicroseconds(10);
+    digitalWrite(trigPin, LOW);
+
+    // Mide la duración del pulso HIGH en el pin ECHO
+    long tiempo = pulseIn(echoPin, HIGH);
+    // Calcula la distancia en cm
+    float distancia = (0.034 * tiempo) /2;
+    return distancia;
+}
+
+void usodeSensor(){
+    float distancia = medidadeSensor();
+    
+    String vacio = "vacio";
+    if (distancia >= 14.0) {
+        Serial.println(vacio);
+    }
+    delay(500); 
+}
 

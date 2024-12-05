@@ -14,8 +14,14 @@
 /**
  * @brief Función que inicializa.
  */
-void InicializaSensor();
-
-
+void inicializaSensor();
+/**
+ * @brief Función que realiza todas las cuentas del sensor.
+ */
+float medidadeSensor();
+/**
+ * @brief Función que utiliza el sensor deacuerdo a nuestros objetivos.
+ */
+void usodeSensor();
 
 #endif
