@@ -8,7 +8,7 @@ void inicializaSensor(){
     pinMode(trigPin, OUTPUT);
     pinMode(echoPin, INPUT);
 
-    digitalWrite(trigPin, LOW);//Inicializamos el pin con 0
+    digitalWrite(trigPin, LOW);
 }
 
 float medidadeSensor(){
@@ -32,6 +32,7 @@ void usodeSensor(){
     String vacio = "vacio";
     if (distancia >= 14.0) {
         Serial.println(vacio);
+        delay(2000);
     }
     delay(500); 
 }

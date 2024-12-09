@@ -1,17 +1,14 @@
 #include <Arduino.h>
 #include <memoria_SD.h>
 #include <control_horarios.h>
+
 #include <SPI.h>
 #include <SD.h>
 
 #define pinCS 10 // Pin de CS del modulo SD
 
-
 File archivo;
 void inicializaMemoriaSD(){
-    while (!Serial) {
-    ; 
-    }
     SPI.begin();
     pinMode(pinCS, OUTPUT); // Configura el pin de CS
     if (SD.begin(pinCS)) {
@@ -24,11 +21,9 @@ void inicializaMemoriaSD(){
 void guardarHorario(byte hora, byte minuto) {
     archivo = SD.open("horarios.txt", FILE_WRITE);
     if (archivo) {
-        if (hora < 10) archivo.print("0"); // Agregar un "0" si la hora es menor a 10
-        archivo.print(hora);
-        archivo.print(":");
-        if (minuto < 10) archivo.print("0"); // Agregar un "0" si el minuto es menor a 10
-        archivo.println(minuto);
+        char resultado[6]; 
+        sprintf(resultado, "%02d:%02d", hora, minuto); 
+        archivo.println(resultado); //guardar en el archivo
         archivo.close();
     } else {
         Serial.println("Error guardando horario");
@@ -37,21 +32,19 @@ void guardarHorario(byte hora, byte minuto) {
 void guardarHistorial(){
     archivo = SD.open("his.txt", FILE_WRITE);
     DateTime now = horaRTC();
-    String fecha =  (now.hour() < 10 ? "0" : "") +  String(now.hour()) + ":" +
-                    (now.minute() < 10 ? "0" : "")+ String(now.minute()) + " " +
-                    (now.day() < 10 ? "0" : "") +   String(now.day()) + "/" +
-                    (now.month() < 10 ? "0" : "") + String(now.month()) + "/" +
-                                                    String(now.year()) + "\n";
+    char fecha[20];  //  "HH:MM DD/MM/YYYY\0"
+    sprintf(fecha, "%02d:%02d %02d/%02d/%04d\n", 
+            now.hour(), now.minute(), 
+            now.day(), now.month(), now.year());
     if (archivo) {
-        archivo.print(fecha);  // Guardar el registro en el archivo
-        archivo.close();          // Cerrar el archivo
+        archivo.print(fecha);  
+        archivo.close();  
     } else {
         Serial.println("Error guardando historial");
     }
 }
-void enviarArchivo(const char* nombreArchivo) {
-    archivo = SD.open(nombreArchivo); // Abrir el archivo en la tarjeta SD
-
+void enviarArchivo(const char* nombreArchivo) { //puntero a una cadena de caracteres constante
+    archivo = SD.open(nombreArchivo); 
     if (archivo) {
         Serial.println("Lista:");
         while (archivo.available()) {

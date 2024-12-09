@@ -17,9 +17,9 @@ const unsigned int Intervalo = 2000;  // Tiempo del servo abierto (2s)
 void setup() {
     Serial.begin(9600);
     inicializaControlHorarios();
+    inicializaMemoriaSD();    
     inicializaSensor();
-    inicializaMemoriaSD();
-    
+
     servo.attach(servoPin);//inicializar pin del servo
     servo.write(0);//inicializar el servo en posicion 0
     pinMode(botonPin, INPUT); // inicializar el boton
@@ -39,24 +39,25 @@ void loop() {
         delay(Intervalo);
         servo.write(0);
         guardarHistorial();
+        delay(2000);
     } else if (Serial.available()>0) { //hay datos en el puerto serial para ser leidos
-        datos = Serial.readString(); //lee y os guarda en datos
+        datos = Serial.readString(); //lee y los guarda en datos
         if (datos == "1"){ //desde la app manda un 1 cuando se acciona el boton dispensar
             servo.write(90);
             delay(Intervalo);
             servo.write(0);
             guardarHistorial();
         } else if(datos.startsWith("<")){
-            datos.remove(0, 1);
-            hora = (datos.toInt());
-            datos.remove(0, (datos.indexOf(",")+1));
+            datos.remove(0, 1); // Elimina el primer carácter '<'
+            hora = (datos.toInt()); // Convierte el valor antes de la coma a un entero
+            datos.remove(0, (datos.indexOf(",")+1)); // Elimina todo hasta y incluyendo la coma
             minuto = (datos.toInt());
             datos.remove(0, (datos.indexOf(">")+1));
-            guardarHorario(hora, minuto); // Guardar en la SD
+            guardarHorario(hora, minuto); 
         } else if (datos == "TXT1") {
-            enviarArchivo("horarios.txt"); // Enviar el primer archivo
+            enviarArchivo("horarios.txt"); 
         } else if (datos == "TXT2") {
-            enviarArchivo("historial.txt"); // Enviar el segundo archivo
+            enviarArchivo("his.txt"); 
         }
     }
 }
