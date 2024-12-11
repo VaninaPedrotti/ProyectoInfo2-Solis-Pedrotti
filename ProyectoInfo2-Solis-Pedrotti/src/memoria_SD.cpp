@@ -18,11 +18,11 @@ void inicializaMemoriaSD(){
     }
 }
 
-void guardarHorario(byte hora, byte minuto) {
+void guardarHorario(byte hora, byte minuto, byte segundo = 00) {
     archivo = SD.open("horarios.txt", FILE_WRITE);
     if (archivo) {
-        char resultado[6]; 
-        sprintf(resultado, "%02d:%02d", hora, minuto); 
+        char resultado[9]; 
+        sprintf(resultado, "%02d:%02d:%02d", hora, minuto, segundo); 
         archivo.println(resultado); //guardar en el archivo
         archivo.close();
     } else {
@@ -43,19 +43,21 @@ void guardarHistorial(){
         Serial.println("Error guardando historial");
     }
 }
-void enviarArchivo(const char* nombreArchivo) { //puntero a una cadena de caracteres constante
+void enviarArchivo(const char* nombreArchivo) {
     archivo = SD.open(nombreArchivo); 
     if (archivo) {
-        Serial.println("Lista:");
+        Serial.println("Inicio");  // Envia un indicador de inicio
         while (archivo.available()) {
             String linea = archivo.readStringUntil('\n');  // Lee hasta el salto de línea
+            linea.trim();  // Elimina espacios y saltos de línea extra
             Serial.println(linea);  // Envia cada línea leída
         }
+        Serial.println("Fin");  // Envia un indicador de fin
         archivo.close();
     } else {
         Serial.println("Error enviando archivo");
-        
     }
 }
+
 
 

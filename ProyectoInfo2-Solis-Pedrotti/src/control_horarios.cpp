@@ -3,9 +3,12 @@
 #include <control_horarios.h>
 #include <memoria_SD.h>
 
+//#include <Wire.h>  // comunicacion I2C con el rtc
 #include <RTClib.h> //reloj
-#include <SPI.h>
+
+
 #include <SD.h> //memoria_SD
+#include <SPI.h> //comunicacion para el modulo sd
 
 RTC_DS3231 RTC; // Objeto del modulo Reloj
 
@@ -14,6 +17,7 @@ int cantidadHorarios = 0; //Ingresados al archivo
 String horarios[totalHorarios]; //Arreglo para almacenar los horarios programados y poder compararlos con el horario actual
 
 void inicializaControlHorarios(){
+    //Wire.begin();         // Iniciar el bus I2C
     RTC.begin(); 
     RTC.adjust(DateTime(F(__DATE__), F(__TIME__)));
 }
@@ -22,9 +26,9 @@ DateTime horaRTC(){
     DateTime now = RTC.now();
     return now;
 }
-String obtenerHoraActual(int hora, int minuto) {
-    char resultado[6]; //HH:MM\0
-    sprintf(resultado, "%02d:%02d", hora, minuto); //unir hora:minuto
+String obtenerHoraActual(int hora, int minuto, int segundo) {
+    char resultado[9]; // HH:MM:SS\0
+    sprintf(resultado, "%02d:%02d:%02d", hora, minuto, segundo); //unir hora:minuto
     return String(resultado); //convertir a String
 }
 void leerHorarios() {

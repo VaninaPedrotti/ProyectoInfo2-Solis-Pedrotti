@@ -26,14 +26,4 @@ float medidadeSensor(){
     return distancia;
 }
 
-void usodeSensor(){
-    float distancia = medidadeSensor();
-    
-    String vacio = "vacio";
-    if (distancia >= 14.0) {
-        Serial.println(vacio);
-        delay(2000);
-    }
-    delay(500); 
-}
 
