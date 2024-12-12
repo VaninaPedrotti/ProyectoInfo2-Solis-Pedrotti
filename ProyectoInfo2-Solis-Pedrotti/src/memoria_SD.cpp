@@ -29,13 +29,12 @@ void guardarHorario(byte hora, byte minuto, byte segundo = 00) {
         Serial.println("Error guardando horario");
     }
 }
-void guardarHistorial(){
+void guardarHistorial(int hora, int minuto, int dia, int mes, int year){
     archivo = SD.open("his.txt", FILE_WRITE);
-    DateTime now = horaRTC();
     char fecha[20];  //  "HH:MM DD/MM/YYYY\0"
     sprintf(fecha, "%02d:%02d %02d/%02d/%04d\n", 
-            now.hour(), now.minute(), 
-            now.day(), now.month(), now.year());
+            hora, minuto, 
+            dia, mes, year);
     if (archivo) {
         archivo.print(fecha);  
         archivo.close();  
@@ -43,20 +42,57 @@ void guardarHistorial(){
         Serial.println("Error guardando historial");
     }
 }
-void enviarArchivo(const char* nombreArchivo) {
-    archivo = SD.open(nombreArchivo); 
+void enviarHorario() {
+    archivo = SD.open("horarios.txt"); 
     if (archivo) {
-        Serial.println("Inicio");  // Envia un indicador de inicio
+        Serial.println("Listado");  // Envia un indicador de inicio
         while (archivo.available()) {
             String linea = archivo.readStringUntil('\n');  // Lee hasta el salto de línea
             linea.trim();  // Elimina espacios y saltos de línea extra
             Serial.println(linea);  // Envia cada línea leída
         }
-        Serial.println("Fin");  // Envia un indicador de fin
+        //Serial.println(".");  // Envia un indicador de fin
         archivo.close();
     } else {
         Serial.println("Error enviando archivo");
     }
+}
+void enviarHistorial() {
+    archivo = SD.open("his.txt", FILE_READ);
+    if (!archivo) {
+        Serial.println("Error leyendo historial");
+        return;
+    }
+
+    // Paso 1: Contar el número de líneas en el archivo
+    int totalLineas = 0;
+    while (archivo.available()) {
+        if (archivo.read() == '\n') {
+            totalLineas++;
+        }
+    }
+    archivo.close();
+
+    // Paso 2: Reabrir el archivo y enviar solo las últimas 10 líneas
+    archivo = SD.open("his.txt", FILE_READ);
+    if (!archivo) {
+        Serial.println("Error reabriendo archivo");
+        return;
+    }
+
+    int saltarLineas = max(0, totalLineas - 10); // Número de líneas a ignorar
+    int lineaActual = 0;
+    Serial.println("Listado");
+    while (archivo.available()) {
+        String linea = archivo.readStringUntil('\n');
+        if (lineaActual >= saltarLineas) {
+            Serial.println(linea); // Enviar al monitor serial
+            // BluetoothSerial.print(linea); // Enviar vía Bluetooth si usas Bluetooth
+        }
+        lineaActual++;
+    }
+
+    archivo.close();
 }
 
 

@@ -3,13 +3,15 @@
 #include <sensor.h>
 #include <memoria_SD.h>
 #include <Servo.h>
-
+#include <RTClib.h> //reloj
+#include <SPI.h>
+#include <Wire.h>
 
 #define botonPin 6
 #define servoPin 8
 
 Servo servo; // objeto del motor
-
+RTC_DS3231 RTC; // Objeto del modulo Reloj
 String datos;
 int hora, minuto;
 
@@ -24,18 +26,25 @@ unsigned long tiempoInicioServo = 0;
 void setup() {
     Serial.begin(9600);
     inicializaMemoriaSD();
-    inicializaControlHorarios();
     inicializaSensor();
-
+    Wire.begin();
+    RTC.begin(); 
+    RTC.adjust(DateTime(F(__DATE__), F(__TIME__)));
     servo.attach(servoPin);  // inicializar pin del servo
     servo.write(0);          // inicializar el servo en posición 0
     pinMode(botonPin, INPUT); // inicializar el botón
 }
+DateTime horaRTC(){ 
+    DateTime now = RTC.now();
+    return now;
+}
 // Función para activar el servo
 void activarServo() {
     servo.write(90);  // Abre el servo
-    guardarHistorial();
     tiempoInicioServo = millis();
+
+    DateTime now = horaRTC();
+    guardarHistorial(now.hour(), now.minute(), now.day(), now.month(), now.year());
 }
 void loop() {
     bool dispenseManual = (digitalRead(botonPin) == HIGH);
@@ -66,9 +75,9 @@ void loop() {
             datos.remove(0, (datos.indexOf(">") + 1));
             guardarHorario(hora, minuto);
         } else if (datos == "TXT1") {
-            enviarArchivo("horarios.txt");
+            enviarHorario();
         } else if (datos == "TXT2") {
-            enviarArchivo("his.txt");
+            enviarHistorial();
         }
     }
 
