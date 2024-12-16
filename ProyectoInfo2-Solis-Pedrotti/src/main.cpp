@@ -1,22 +1,26 @@
 #include <Arduino.h>
+
+#include <Servo.h> 
+//reloj
+#include <RTClib.h> 
+#include <SPI.h>
+#include <Wire.h>
+
 #include <control_horarios.h>
 #include <sensor.h>
 #include <memoria_SD.h>
-#include <Servo.h>
-#include <RTClib.h> //reloj
-#include <SPI.h>
-#include <Wire.h>
 
 #define botonPin 6
 #define servoPin 8
 
 Servo servo; // objeto del motor
 RTC_DS3231 RTC; // Objeto del modulo Reloj
+
 String datos;
 int hora, minuto;
 
 const unsigned long IntervaloServo = 2000;  // Tiempo del servo abierto (2s)
-const unsigned long IntervaloMensaje = 2000; // Intervalo para enviar "vacio"
+const unsigned long IntervaloMensaje = 60000; // Intervalo para entre cada mensaje "vacio" Si sigue vacio el dispenser
 const unsigned long IntervaloSensor = 500; // Intervalo para medir el sensor
 
 unsigned long tiempoAnteriorSensor = 0;
@@ -25,37 +29,34 @@ unsigned long tiempoInicioServo = 0;
 
 void setup() {
     Serial.begin(9600);
+
     inicializaMemoriaSD();
     inicializaSensor();
-    Wire.begin();
-    RTC.begin(); 
-    RTC.adjust(DateTime(F(__DATE__), F(__TIME__)));
+    
+    RTC.begin(); //reloj
+    Wire.begin(); //comunicacion I2C del reloj
+    RTC.adjust(DateTime(F(__DATE__), F(__TIME__))); //ajusta la hora 
+
     servo.attach(servoPin);  // inicializar pin del servo
     servo.write(0);          // inicializar el servo en posición 0
     pinMode(botonPin, INPUT); // inicializar el botón
 }
-DateTime horaRTC(){ 
-    DateTime now = RTC.now();
-    return now;
-}
+
 // Función para activar el servo
 void activarServo() {
     servo.write(90);  // Abre el servo
     tiempoInicioServo = millis();
 
-    DateTime now = horaRTC();
-    guardarHistorial(now.hour(), now.minute(), now.day(), now.month(), now.year());
+    guardarHistorial(RTC.now().hour(), RTC.now().minute(), RTC.now().day(), RTC.now().month(), RTC.now().year());
 }
 void loop() {
     bool dispenseManual = (digitalRead(botonPin) == HIGH);
     
-    DateTime now = horaRTC();
-    String horaActual = obtenerHoraActual(now.hour(), now.minute(), now.second());
+    String horaActual = obtenerHoraActual(RTC.now().hour(), RTC.now().minute(), RTC.now().second());
     leerHorarios();
-
+    // --Dispensacion manual
     if (dispenseManual && servo.read() == 0) { // Si el botón está presionado y el servo está cerrado
         activarServo();
-        Serial.println(horaActual);
     }
     
     if (compararHorarios(horaActual) && servo.read() == 0) { // Si es hora programada y el servo está cerrado
@@ -65,12 +66,12 @@ void loop() {
     if (Serial.available() > 0) {
         datos = Serial.readString(); // Lee los datos enviados por Serial
 
-        if (datos == "1" && servo.read() == 0) { // Desde la app manda un 1 y el servo está cerrado
+        if (datos == "1" && servo.read() == 0) { // Desde la app manda un 1(boton dispensar) y el servo está cerrado
             activarServo();
-        } else if (datos.startsWith("<")) {
+        } else if (datos.startsWith("<")) { 
             datos.remove(0, 1); // Elimina el primer carácter '<'
             hora = (datos.toInt()); // Convierte el valor antes de la coma a un entero
-            datos.remove(0, (datos.indexOf(",") + 1)); // Elimina todo hasta y incluyendo la coma
+            datos.remove(0, (datos.indexOf(",") + 1)); // Elimina todo hasta, incluyendo la coma
             minuto = (datos.toInt());
             datos.remove(0, (datos.indexOf(">") + 1));
             guardarHorario(hora, minuto);
@@ -81,25 +82,23 @@ void loop() {
         }
     }
 
-    // Control del servo (cerrarlo después de cierto tiempo)
+    // -- Control del servo -- 
     unsigned long tiempoActual = millis();
     if (servo.read() == 90 && (tiempoActual - tiempoInicioServo >= IntervaloServo)) {
         servo.write(0);  // Cerrar el servo después del intervalo
     }
 
-    // --- Lógica del sensor al final del loop ---
+    // --- Sensor  ---
     if (tiempoActual - tiempoAnteriorSensor >= IntervaloSensor) {
-        tiempoAnteriorSensor = tiempoActual;
+        tiempoAnteriorSensor = tiempoActual; // Actualiza el tiempo del ultimo sensor
 
         float distancia = medidadeSensor();
-        // Enviar mensaje "vacio" si es necesario
-        if (distancia >= 25.0) { // Si la distancia es mayor o igual a 25 cm
-            if (tiempoAnteriorMensaje == 0 || tiempoActual - tiempoAnteriorMensaje >= 60000) { // 1 minuto o primer mensaje
+        if (distancia >= 15.0) { //Distancia al fondo del deposito de alimento
+            if (tiempoAnteriorMensaje == 0 || tiempoActual - tiempoAnteriorMensaje >= IntervaloMensaje) { // 1 minuto o primer mensaje
                 Serial.println("vacio");
-                tiempoAnteriorMensaje = tiempoActual; // Actualiza el tiempo del último mensaje "vacio"
+                tiempoAnteriorMensaje = tiempoActual; // Actualiza el tiempo del último mensaje 
             }
         } else {
-            // Reinicia el temporizador si la distancia es menor a 25 cm
             tiempoAnteriorMensaje = 0; // Reinicia para permitir el primer mensaje inmediatamente
         }
 

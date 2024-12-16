@@ -1,25 +1,18 @@
-
 #include <Arduino.h>
-#include <control_horarios.h>
-#include <memoria_SD.h>
-
-//#include <Wire.h>  // comunicacion I2C con el rtc
-
-
 
 #include <SD.h> //memoria_SD
-#include <SPI.h> //comunicacion para el modulo sd
+#include <SPI.h> //comunicacion SPI para el modulo sd
 
-
+#include <control_horarios.h>
+#include <memoria_SD.h>
 
 const int totalHorarios = 10; //se verifica que no se pase ese limite desde la app
 int cantidadHorarios = 0; //Ingresados al archivo
 String horarios[totalHorarios]; //Arreglo para almacenar los horarios programados y poder compararlos con el horario actual
 
-
 String obtenerHoraActual(int hora, int minuto, int segundo) {
     char resultado[9]; // HH:MM:SS\0
-    sprintf(resultado, "%02d:%02d:%02d", hora, minuto, segundo); //unir hora:minuto
+    sprintf(resultado, "%02d:%02d:%02d", hora, minuto, segundo); //unir hora:minuto:segundo
     return String(resultado); //convertir a String
 }
 void leerHorarios() {
