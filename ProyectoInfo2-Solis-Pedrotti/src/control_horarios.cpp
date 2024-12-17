@@ -6,9 +6,9 @@
 #include <control_horarios.h>
 #include <memoria_SD.h>
 
-const int totalHorarios = 10; //se verifica que no se pase ese limite desde la app
+const int limiteHorarios = 10; //Mismo valor que la de memoria_SD
 int cantidadHorarios = 0; //Ingresados al archivo
-String horarios[totalHorarios]; //Arreglo para almacenar los horarios programados y poder compararlos con el horario actual
+String horarios[limiteHorarios]; //Arreglo para almacenar los horarios programados y poder compararlos con el horario actual
 
 String obtenerHoraActual(int hora, int minuto, int segundo) {
     char resultado[9]; // HH:MM:SS\0
@@ -16,10 +16,10 @@ String obtenerHoraActual(int hora, int minuto, int segundo) {
     return String(resultado); //convertir a String
 }
 void leerHorarios() {
-    File archivo2 = SD.open("HORARIOS.TXT", FILE_READ); // Modo lectura
+    File archivo2 = SD.open("horarios.txt", FILE_READ); // Modo lectura
     if (!archivo2) {
         // Crear el archivo vacío si no existe
-        archivo2 = SD.open("HORARIOS.TXT", FILE_WRITE); // Modo escritura
+        archivo2 = SD.open("horarios.txy", FILE_WRITE); // Modo escritura
         if (!archivo2) {
             Serial.println("Error al crear el archivo HORARIOS.TXT");
             return;
@@ -29,7 +29,7 @@ void leerHorarios() {
     }
 
     int index = 0;
-    while (archivo2.available() && index < totalHorarios) { 
+    while (archivo2.available() && index < limiteHorarios) { 
         horarios[index] = archivo2.readStringUntil('\n'); // Leer datos hasta \n
         horarios[index].trim(); // Limpiar la cadena
         index++;

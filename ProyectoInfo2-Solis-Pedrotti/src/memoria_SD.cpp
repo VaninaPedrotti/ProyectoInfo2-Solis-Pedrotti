@@ -9,6 +9,8 @@
 #define pinCS 10 // Pin de CS del modulo SD
 
 File archivo;
+const int limiteHorarios = 10; //Mismo valor que la de control_horarios
+const int limiteHistorial = 10;
 
 void inicializaMemoriaSD(){
     SPI.begin();
@@ -21,16 +23,31 @@ void inicializaMemoriaSD(){
 }
 
 void guardarHorario(byte hora, byte minuto, byte segundo) {
+    File archivo = SD.open("horarios.txt", FILE_READ);
+    int lineas = 0;
+    if (archivo) {
+        while (archivo.available()) {
+            if (archivo.read() == '\n') { // Contar líneas
+                lineas++;
+            }
+        }
+        archivo.close();
+    }
+    if (lineas >= limiteHorarios) {
+        Serial.println("Limite");
+    }
+
     archivo = SD.open("horarios.txt", FILE_WRITE);
     if (archivo) {
         char resultado[9]; // HH:MM:SS\0
-        sprintf(resultado, "%02d:%02d:%02d", hora, minuto, segundo); 
-        archivo.println(resultado); //guardar en el archivo
+        sprintf(resultado, "%02d:%02d:%02d", hora, minuto, segundo);
+        archivo.println(resultado); // Guardar en el archivo
         archivo.close();
     } else {
         Serial.println("Error guardando horario");
     }
 }
+
 void guardarHistorial(int hora, int minuto, int dia, int mes, int year){
     archivo = SD.open("his.txt", FILE_WRITE);
     char fecha[20];  //  HH:MM DD/MM/YYYY\0
@@ -45,7 +62,7 @@ void guardarHistorial(int hora, int minuto, int dia, int mes, int year){
     }
 }
 void enviarHorario() {
-    archivo = SD.open("horarios.txt"); 
+    archivo = SD.open("horarios.txt", FILE_READ); 
     if (archivo) {
         Serial.println("Listado");  // Envia un indicador de inicio
         while (archivo.available()) {
@@ -71,21 +88,19 @@ void enviarHistorial() {
         }
     }
     archivo.close();
-
-    //Reabrir el archivo y enviar solo las últimas 10 líneas
+    
     archivo = SD.open("his.txt", FILE_READ);
     if (!archivo) {
         Serial.println("Error reabriendo archivo");
         return;
     }
-    int saltarLineas = (totalLineas > 10) ? (totalLineas - 10) : 0; // Número de líneas a ignorar
+    int saltarLineas = (totalLineas > limiteHistorial) ? (totalLineas - limiteHistorial) : 0; // Número de líneas a ignorar
     int lineaActual = 0;
     Serial.println("Listado");
     while (archivo.available()) {
         String linea = archivo.readStringUntil('\n');
         if (lineaActual >= saltarLineas) {
             Serial.println(linea); 
-            
         }
         lineaActual++;
     }

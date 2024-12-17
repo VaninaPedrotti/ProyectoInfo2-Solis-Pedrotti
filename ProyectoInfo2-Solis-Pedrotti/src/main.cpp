@@ -37,7 +37,7 @@ void setup() {
     Wire.begin(); //comunicacion I2C del reloj
     RTC.adjust(DateTime(F(__DATE__), F(__TIME__))); //ajusta la hora 
 
-    servo.attach(servoPin);  // inicializar pin del servo
+    servo.attach(servoPin);  // asigna pin del servo
     servo.write(0);          // inicializar el servo en posición 0
     pinMode(botonPin, INPUT); // inicializar el botón
 }
@@ -47,7 +47,8 @@ void activarServo() {
     servo.write(90);  // Abre el servo
     tiempoInicioServo = millis();
 
-    guardarHistorial(RTC.now().hour(), RTC.now().minute(), RTC.now().day(), RTC.now().month(), RTC.now().year());
+    guardarHistorial(RTC.now().hour(), RTC.now().minute(), 
+                    RTC.now().day(), RTC.now().month(), RTC.now().year());
 }
 void loop() {
     bool dispenseManual = (digitalRead(botonPin) == HIGH);
@@ -91,7 +92,6 @@ void loop() {
     // --- Sensor  ---
     if (tiempoActual - tiempoAnteriorSensor >= IntervaloSensor) {
         tiempoAnteriorSensor = tiempoActual; // Actualiza el tiempo del ultimo sensor
-
         float distancia = medidadeSensor();
         if (distancia >= 15.0) { //Distancia al fondo del deposito de alimento
             if (tiempoAnteriorMensaje == 0 || tiempoActual - tiempoAnteriorMensaje >= IntervaloMensaje) { // 1 minuto o primer mensaje
@@ -101,7 +101,6 @@ void loop() {
         } else {
             tiempoAnteriorMensaje = 0; // Reinicia para permitir el primer mensaje inmediatamente
         }
-
     }
 }
 
