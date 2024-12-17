@@ -16,10 +16,10 @@ String obtenerHoraActual(int hora, int minuto, int segundo) {
     return String(resultado); //convertir a String
 }
 void leerHorarios() {
-    File archivo2 = SD.open("horarios.txt", FILE_READ); // Modo lectura
+    File archivo2 = SD.open("HORARIOS.TXT", FILE_READ); // Modo lectura
     if (!archivo2) {
         // Crear el archivo vacío si no existe
-        archivo2 = SD.open("horarios.txy", FILE_WRITE); // Modo escritura
+        archivo2 = SD.open("HORARIOS.TXT", FILE_WRITE); // Modo escritura
         if (!archivo2) {
             Serial.println("Error al crear el archivo HORARIOS.TXT");
             return;
